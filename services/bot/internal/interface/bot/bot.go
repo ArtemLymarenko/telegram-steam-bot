@@ -2,30 +2,19 @@ package v1Bot
 
 import (
 	"bot/internal/infrastructure/telegram"
-	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"bot/internal/interface/bot/handlers"
 )
 
-func GetRouter() *telegram.Router {
+func GetRouter(handlers *handlers.BotHandlers) *telegram.Router {
 	router := telegram.NewRouter()
 
-	router.AddHandler(telegram.HandlerTypeCmd, "open", func(ctx *telegram.RequestCtx) error {
-		numericKeyboard := tgbotapi.NewReplyKeyboard(
-			tgbotapi.NewKeyboardButtonRow(
-				tgbotapi.NewKeyboardButton("/close"),
-			),
-		)
+	router.UseMiddleware(handlers.HelloMiddleware)
 
-		return ctx.ShowMarkup("Added", numericKeyboard)
-	})
-
-	router.AddHandler(telegram.HandlerTypeCmd, "close", func(ctx *telegram.RequestCtx) error {
-		return ctx.CloseMarkup("Closed")
-	})
-
-	router.AddHandler(telegram.HandlerTypeText, "hello", func(ctx *telegram.RequestCtx) error {
-		return ctx.Send(fmt.Sprintf("Hello %s!", ctx.Update.Message.From.UserName))
-	})
+	router.AddHandler(telegram.HandlerTypeCmd, "open", handlers.Open)
+	router.AddHandler(telegram.HandlerTypeCmd, "close", handlers.Close)
+	router.AddHandler(telegram.HandlerTypeCmd, "help", handlers.Help)
+	router.AddHandler(telegram.HandlerTypeCmd, "add_steam_game", handlers.AddGame)
+	router.AddHandler(telegram.HandlerTypeCmd, "check_my_games", handlers.CheckMyGames)
 
 	return router
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"bot/internal/infrastructure/telegram"
 	v1Bot "bot/internal/interface/bot"
+	"bot/internal/interface/bot/handlers"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
@@ -15,7 +16,9 @@ func main() {
 	}
 	token := os.Getenv("TELEGRAM_TOKEN")
 
-	router := v1Bot.GetRouter()
-	newBot := telegram.NewBot(token, true, router)
-	newBot.Listen()
+	botHandlers := handlers.NewBotHandlers()
+	routes := v1Bot.GetRouter(botHandlers)
+
+	telegramBot := telegram.NewBot(token, true, routes)
+	telegramBot.Listen()
 }

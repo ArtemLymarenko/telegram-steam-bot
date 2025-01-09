@@ -1,6 +1,9 @@
 package telegram
 
-import "errors"
+import (
+	"errors"
+	"log"
+)
 
 type HandlerType int
 
@@ -17,13 +20,20 @@ type Option struct {
 type RouterHandlerFunc func(req *RequestCtx) error
 
 type Router struct {
-	handlers map[Option]RouterHandlerFunc
+	handlers    map[Option]RouterHandlerFunc
+	middlewares []RouterHandlerFunc
 }
 
 func NewRouter() *Router {
 	return &Router{
-		handlers: make(map[Option]RouterHandlerFunc),
+		handlers:    make(map[Option]RouterHandlerFunc),
+		middlewares: make([]RouterHandlerFunc, 0),
 	}
+}
+
+func (router *Router) HasHandler(option Option) bool {
+	_, ok := router.handlers[option]
+	return ok
 }
 
 func (router *Router) AddHandler(handlerType HandlerType, route string, handler RouterHandlerFunc) {
@@ -40,4 +50,27 @@ func (router *Router) GetHandler(cmd Option) (RouterHandlerFunc, error) {
 	}
 
 	return nil, errors.New("command not found")
+}
+
+func (router *Router) UseMiddleware(middleware RouterHandlerFunc) {
+	router.middlewares = append(router.middlewares, middleware)
+}
+
+func (router *Router) launchMiddlewares(ctx *RequestCtx) {
+	ctx.currentIndex = 0
+	ctx.abortProcessing = false
+
+	for ctx.currentIndex < len(router.middlewares) {
+		middleware := router.middlewares[ctx.currentIndex]
+		err := middleware(ctx)
+		if err != nil {
+			log.Println(err)
+		}
+
+		if !ctx.abortProcessing {
+			ctx.NextMiddleware()
+		} else {
+			break
+		}
+	}
 }
