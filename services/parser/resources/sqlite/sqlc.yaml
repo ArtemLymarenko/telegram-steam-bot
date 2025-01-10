@@ -2,11 +2,12 @@ version: "2"
 sql:
   - name: sqlite
     engine: "sqlite"
-    queries: "query/query.sql"
+    queries: "./query"
     schema: "../migrations"
     gen:
       go:
-        package: "sqlite"
+        emit_prepared_queries: true
+        package: "repository"
         out: "../../internal/infrastructure/sqlite"
     database:
       uri: file:games?mode=memory&cache=shared

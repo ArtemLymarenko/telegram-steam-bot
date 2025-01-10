@@ -2,10 +2,7 @@ CREATE=migrate create -ext sql -dir resources/migrations -seq $(name)
 create-migration:
 	$(CREATE)
 
-
-DB_PATH=sqlite3://resources/sqlite/sqlite.db?cache=shared
-
-MIGRATE=migrate -source file://resources/migrations -database $(DB_PATH)
+MIGRATE=migrate -source file://resources/migrations -database sqlite3://resources/sqlite/sqlite.db
 migrate-up:
 	$(MIGRATE) up
 

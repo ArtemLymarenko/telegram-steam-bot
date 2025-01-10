@@ -10,13 +10,15 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
-	"parser/internal/infrastructure/sqlite"
+	"parser/internal/domain"
+	repository "parser/internal/infrastructure/sqlite"
+	sqlitemap "parser/internal/infrastructure/sqlite/mapper"
 )
 
 func main() {
 	connectionPath := "D:\\Development\\GOLang\\steam-tg-bot\\services\\parser\\resources\\sqlite\\sqlite.db"
 
-	db, err := sql.Open("sqlite3", connectionPath)
+	db, err := sql.Open("sqlite", connectionPath)
 	if err != nil {
 		return
 	}
@@ -41,20 +43,44 @@ func main() {
 		log.Fatal(err)
 	}
 
-	repo := sqlite.New(db)
-	ctx := context.Background()
-	createGame, err := repo.CreateGame(ctx, sqlite.CreateGameParams{
-		ID:   1,
-		Name: "Uncharted",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(createGame)
+	tx, _ := db.Begin()
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
 
-	game, err := repo.FindGame(ctx, 1)
+	repo := repository.New(tx)
+	ctx := context.Background()
+	gameInfo := domain.GameInfo{
+		GameId:          2,
+		ImageUrl:        "asd",
+		InitialPrice:    10.2,
+		FinalPrice:      10.2,
+		DiscountPercent: 0,
+	}
+	game := domain.Game{
+		Id:       2,
+		Name:     "Uncharted 2",
+		GameInfo: gameInfo,
+	}
+
+	err = repo.CreateGame(ctx, sqlitemap.GameEntityToCreateGameParams(game))
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(game)
+
+	err = repo.CreateGameInfo(ctx, sqlitemap.GameInfoEntityToCreateGameInfoParams(gameInfo))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	gameRow, err := repo.FindGame(ctx, 1)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_ = tx.Commit()
+
+	fmt.Println(sqlitemap.FindGameRowToGame(gameRow))
 }

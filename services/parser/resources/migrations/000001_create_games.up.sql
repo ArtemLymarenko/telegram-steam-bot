@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS games (
 );
 
 CREATE TABLE IF NOT EXISTS game_info (
-    game_id          INTEGER NOT NULL,
+    game_id          INTEGER PRIMARY KEY,
     image_url        TEXT,
     initial_price    REAL,
     final_price      REAL,

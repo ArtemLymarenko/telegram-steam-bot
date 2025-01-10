@@ -3,14 +3,15 @@
 //   sqlc v1.27.0
 // source: query.sql
 
-package sqlite
+package repository
 
 import (
 	"context"
+	"database/sql"
 )
 
-const createGame = `-- name: CreateGame :one
-INSERT INTO games(id, name) VALUES (?, ?) RETURNING id, name
+const createGame = `-- name: CreateGame :exec
+INSERT INTO games(id, name) VALUES (?, ?)
 `
 
 type CreateGameParams struct {
@@ -18,20 +19,57 @@ type CreateGameParams struct {
 	Name string
 }
 
-func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (Game, error) {
-	row := q.db.QueryRowContext(ctx, createGame, arg.ID, arg.Name)
-	var i Game
-	err := row.Scan(&i.ID, &i.Name)
-	return i, err
+func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) error {
+	_, err := q.exec(ctx, q.createGameStmt, createGame, arg.ID, arg.Name)
+	return err
+}
+
+const createGameInfo = `-- name: CreateGameInfo :exec
+INSERT INTO game_info(game_id, image_url, initial_price, final_price, discount_percent) VALUES (?,?,?,?,?)
+`
+
+type CreateGameInfoParams struct {
+	GameID          int64
+	ImageUrl        sql.NullString
+	InitialPrice    sql.NullFloat64
+	FinalPrice      sql.NullFloat64
+	DiscountPercent sql.NullFloat64
+}
+
+func (q *Queries) CreateGameInfo(ctx context.Context, arg CreateGameInfoParams) error {
+	_, err := q.exec(ctx, q.createGameInfoStmt, createGameInfo,
+		arg.GameID,
+		arg.ImageUrl,
+		arg.InitialPrice,
+		arg.FinalPrice,
+		arg.DiscountPercent,
+	)
+	return err
 }
 
 const findGame = `-- name: FindGame :one
-SELECT g.id, g.name FROM games as g WHERE g.id = ? LIMIT 1
+SELECT g.id, g.name, gi.game_id, gi.image_url, gi.initial_price, gi.final_price, gi.discount_percent  FROM games as g
+    LEFT JOIN game_info as gi
+    ON g.id = gi.game_id
+    WHERE g.id = ? LIMIT 1
 `
 
-func (q *Queries) FindGame(ctx context.Context, id int64) (Game, error) {
-	row := q.db.QueryRowContext(ctx, findGame, id)
-	var i Game
-	err := row.Scan(&i.ID, &i.Name)
+type FindGameRow struct {
+	Game     Game
+	GameInfo GameInfo
+}
+
+func (q *Queries) FindGame(ctx context.Context, id int64) (FindGameRow, error) {
+	row := q.queryRow(ctx, q.findGameStmt, findGame, id)
+	var i FindGameRow
+	err := row.Scan(
+		&i.Game.ID,
+		&i.Game.Name,
+		&i.GameInfo.GameID,
+		&i.GameInfo.ImageUrl,
+		&i.GameInfo.InitialPrice,
+		&i.GameInfo.FinalPrice,
+		&i.GameInfo.DiscountPercent,
+	)
 	return i, err
 }
