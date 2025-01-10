@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS game_info;
+DROP TABLE IF EXISTS games;

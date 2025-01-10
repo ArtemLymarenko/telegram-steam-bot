@@ -22,6 +22,7 @@ type RouterHandlerFunc func(req *RequestCtx) error
 type Router struct {
 	handlers    map[Option]RouterHandlerFunc
 	middlewares []RouterHandlerFunc
+	inlineQuery RouterHandlerFunc
 }
 
 func NewRouter() *Router {
@@ -34,6 +35,22 @@ func NewRouter() *Router {
 func (router *Router) HasHandler(option Option) bool {
 	_, ok := router.handlers[option]
 	return ok
+}
+
+func (router *Router) AddInlineQuery(handler RouterHandlerFunc) {
+	if router.inlineQuery != nil {
+		log.Fatal("AddInlineQuery already has a handler")
+	}
+
+	router.inlineQuery = handler
+}
+
+func (router *Router) GetInlineQuery() (RouterHandlerFunc, error) {
+	if router.inlineQuery == nil {
+		return nil, errors.New("GetInlineQuery not found in router")
+	}
+
+	return router.inlineQuery, nil
 }
 
 func (router *Router) AddHandler(handlerType HandlerType, route string, handler RouterHandlerFunc) {

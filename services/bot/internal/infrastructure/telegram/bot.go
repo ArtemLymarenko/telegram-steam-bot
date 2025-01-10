@@ -3,7 +3,9 @@ package telegram
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
+	"runtime"
 	"strings"
+	"sync"
 )
 
 type Bot struct {
@@ -26,7 +28,7 @@ func NewBot(token string, debug bool, router *Router) *Bot {
 	}
 }
 
-func (b *Bot) getRequestArgs(text string) []string {
+func (b *Bot) getCommandArgs(text string) []string {
 	msg := strings.Fields(text)
 	if len(msg) == 1 {
 		return nil
@@ -59,7 +61,7 @@ func (b *Bot) handleRequestAsync(update *tgbotapi.Update) error {
 			}
 		}
 
-		ctx.args = b.getRequestArgs(msgText)
+		ctx.args = b.getCommandArgs(msgText)
 	}
 
 	handler, err := b.router.GetHandler(option)
@@ -75,18 +77,40 @@ func (b *Bot) Listen() {
 	u.Timeout = 60
 	updates := b.bot.GetUpdatesChan(u)
 
-	for update := range updates {
-		if update.Message == nil {
-			continue
-		}
+	numThreads := runtime.NumCPU()
 
-		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
+	wg := &sync.WaitGroup{}
+	wg.Add(numThreads)
+	for range numThreads {
 		go func() {
-			err := b.handleRequestAsync(&update)
-			if err != nil {
-				log.Printf("[%s] %s", update.Message.From.UserName, err.Error())
+			defer wg.Done()
+
+			for update := range updates {
+				if update.InlineQuery != nil {
+					inlineQuery, err := b.router.GetInlineQuery()
+					if err != nil {
+						continue
+					}
+
+					ctx := &RequestCtx{Update: &update, bot: b.bot}
+					if err = inlineQuery(ctx); err != nil {
+						continue
+					}
+				}
+
+				if update.Message == nil {
+					continue
+				}
+
+				log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+
+				err := b.handleRequestAsync(&update)
+				if err != nil {
+					log.Printf("[%s] %s", update.Message.From.UserName, err.Error())
+				}
 			}
 		}()
 	}
+
+	wg.Wait()
 }

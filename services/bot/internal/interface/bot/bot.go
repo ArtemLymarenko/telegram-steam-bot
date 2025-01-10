@@ -10,6 +10,8 @@ func GetRouter(handlers *handlers.BotHandlers) *telegram.Router {
 
 	router.UseMiddleware(handlers.HelloMiddleware)
 
+	router.AddInlineQuery(handlers.InlineEchoQuery)
+
 	router.AddHandler(telegram.HandlerTypeCmd, "open", handlers.Open)
 	router.AddHandler(telegram.HandlerTypeCmd, "close", handlers.Close)
 	router.AddHandler(telegram.HandlerTypeCmd, "help", handlers.Help)
