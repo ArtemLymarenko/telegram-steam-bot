@@ -5,7 +5,7 @@ import (
 )
 
 type GameInfo struct {
-	GameId          int
+	GameId          int64
 	ImageUrl        string
 	InitialPrice    float64
 	FinalPrice      float64

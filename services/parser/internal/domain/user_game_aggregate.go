@@ -1,6 +1,6 @@
 package domain
 
 type UserGamesAggregate struct {
-	UserId int
+	UserId int64
 	Games  []*Game
 }

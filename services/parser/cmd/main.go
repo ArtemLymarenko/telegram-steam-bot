@@ -1,14 +1,16 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
+	"parser/internal/infrastructure/sqlite"
 )
 
 func main() {
@@ -38,4 +40,21 @@ func main() {
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		log.Fatal(err)
 	}
+
+	repo := sqlite.New(db)
+	ctx := context.Background()
+	createGame, err := repo.CreateGame(ctx, sqlite.CreateGameParams{
+		ID:   1,
+		Name: "Uncharted",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(createGame)
+
+	game, err := repo.FindGame(ctx, 1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(game)
 }

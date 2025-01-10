@@ -12,3 +12,6 @@ migrate-up:
 migrate-down:
 	$(MIGRATE) down
 
+
+sqlc-generate:
+	cd resources/sqlite && sqlc generate
