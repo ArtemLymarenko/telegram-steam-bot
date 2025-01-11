@@ -38,7 +38,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://resources/sqlite/migrations", connectionPath, driver)
+	m, err := migrate.NewWithDatabaseInstance("file://services/parser/resources/sqlite/migrations", connectionPath, driver)
 	if err != nil {
 		log.Fatal(err)
 	}
