@@ -7,7 +7,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"fmt"
 )
 
 type DBTX interface {
@@ -21,98 +20,12 @@ func New(db DBTX) *Queries {
 	return &Queries{db: db}
 }
 
-func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
-	q := Queries{db: db}
-	var err error
-	if q.createGameStmt, err = db.PrepareContext(ctx, createGame); err != nil {
-		return nil, fmt.Errorf("error preparing query createGame: %w", err)
-	}
-	if q.createGameInfoStmt, err = db.PrepareContext(ctx, createGameInfo); err != nil {
-		return nil, fmt.Errorf("error preparing query createGameInfo: %w", err)
-	}
-	if q.findGameStmt, err = db.PrepareContext(ctx, findGame); err != nil {
-		return nil, fmt.Errorf("error preparing query findGame: %w", err)
-	}
-	if q.findUserGamesStmt, err = db.PrepareContext(ctx, findUserGames); err != nil {
-		return nil, fmt.Errorf("error preparing query findUserGames: %w", err)
-	}
-	return &q, nil
-}
-
-func (q *Queries) Close() error {
-	var err error
-	if q.createGameStmt != nil {
-		if cerr := q.createGameStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createGameStmt: %w", cerr)
-		}
-	}
-	if q.createGameInfoStmt != nil {
-		if cerr := q.createGameInfoStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createGameInfoStmt: %w", cerr)
-		}
-	}
-	if q.findGameStmt != nil {
-		if cerr := q.findGameStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing findGameStmt: %w", cerr)
-		}
-	}
-	if q.findUserGamesStmt != nil {
-		if cerr := q.findUserGamesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing findUserGamesStmt: %w", cerr)
-		}
-	}
-	return err
-}
-
-func (q *Queries) exec(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) (sql.Result, error) {
-	switch {
-	case stmt != nil && q.tx != nil:
-		return q.tx.StmtContext(ctx, stmt).ExecContext(ctx, args...)
-	case stmt != nil:
-		return stmt.ExecContext(ctx, args...)
-	default:
-		return q.db.ExecContext(ctx, query, args...)
-	}
-}
-
-func (q *Queries) query(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) (*sql.Rows, error) {
-	switch {
-	case stmt != nil && q.tx != nil:
-		return q.tx.StmtContext(ctx, stmt).QueryContext(ctx, args...)
-	case stmt != nil:
-		return stmt.QueryContext(ctx, args...)
-	default:
-		return q.db.QueryContext(ctx, query, args...)
-	}
-}
-
-func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) *sql.Row {
-	switch {
-	case stmt != nil && q.tx != nil:
-		return q.tx.StmtContext(ctx, stmt).QueryRowContext(ctx, args...)
-	case stmt != nil:
-		return stmt.QueryRowContext(ctx, args...)
-	default:
-		return q.db.QueryRowContext(ctx, query, args...)
-	}
-}
-
 type Queries struct {
-	db                 DBTX
-	tx                 *sql.Tx
-	createGameStmt     *sql.Stmt
-	createGameInfoStmt *sql.Stmt
-	findGameStmt       *sql.Stmt
-	findUserGamesStmt  *sql.Stmt
+	db DBTX
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                 tx,
-		tx:                 tx,
-		createGameStmt:     q.createGameStmt,
-		createGameInfoStmt: q.createGameInfoStmt,
-		findGameStmt:       q.findGameStmt,
-		findUserGamesStmt:  q.findUserGamesStmt,
+		db: tx,
 	}
 }

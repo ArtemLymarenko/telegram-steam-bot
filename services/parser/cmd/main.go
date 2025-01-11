@@ -1,24 +1,22 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
-	"parser/internal/domain"
 	repository "parser/internal/infrastructure/sqlite"
-	sqlitemap "parser/internal/infrastructure/sqlite/mapper"
+	"parser/internal/service"
+	txmanager "parser/pkg/tx_manager"
 )
 
 func main() {
 	connectionPath := "D:\\Development\\GOLang\\steam-tg-bot\\services\\parser\\resources\\sqlite\\sqlite.db"
 
-	db, err := sql.Open("sqlite", connectionPath)
+	db, err := sql.Open("sqlite3", connectionPath)
 	if err != nil {
 		return
 	}
@@ -43,44 +41,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	tx, _ := db.Begin()
-	defer func() {
-		if err != nil {
-			_ = tx.Rollback()
-		}
-	}()
-
-	repo := repository.New(tx)
-	ctx := context.Background()
-	gameInfo := domain.GameInfo{
-		GameId:          2,
-		ImageUrl:        "asd",
-		InitialPrice:    10.2,
-		FinalPrice:      10.2,
-		DiscountPercent: 0,
-	}
-	game := domain.Game{
-		Id:       2,
-		Name:     "Uncharted 2",
-		GameInfo: gameInfo,
-	}
-
-	err = repo.CreateGame(ctx, sqlitemap.GameEntityToCreateGameParams(game))
+	manager := txmanager.New(db)
+	gamesRepo := repository.NewGames(db)
+	gamesSvc := service.NewGames(gamesRepo, manager)
+	err = gamesSvc.TxTest()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	err = repo.CreateGameInfo(ctx, sqlitemap.GameInfoEntityToCreateGameInfoParams(gameInfo))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	gameRow, err := repo.FindGame(ctx, 1)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_ = tx.Commit()
-
-	fmt.Println(sqlitemap.FindGameRowToGame(gameRow))
 }

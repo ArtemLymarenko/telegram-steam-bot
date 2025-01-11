@@ -6,7 +6,6 @@ sql:
     schema: "../migrations"
     gen:
       go:
-        emit_prepared_queries: true
         package: "repository"
         out: "../../internal/infrastructure/sqlite"
     database:
