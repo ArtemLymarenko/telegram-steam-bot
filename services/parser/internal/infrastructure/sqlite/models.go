@@ -20,3 +20,8 @@ type GameInfo struct {
 	FinalPrice      sql.NullFloat64
 	DiscountPercent sql.NullFloat64
 }
+
+type UsersGame struct {
+	GameID int64
+	UserID int64
+}

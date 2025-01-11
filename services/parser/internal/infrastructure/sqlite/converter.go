@@ -1,4 +1,4 @@
-package sqlitemap
+package repository
 
 import "database/sql"
 

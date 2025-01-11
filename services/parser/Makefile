@@ -1,4 +1,4 @@
-CREATE=migrate create -ext sql -dir resources/migrations -seq $(name)
+CREATE=migrate create -ext sql -dir resources/migrations mig $(name)
 create-migration:
 	$(CREATE)
 

@@ -10,25 +10,25 @@ import (
 	"database/sql"
 )
 
-const createGame = `-- name: CreateGame :exec
+const createGame = `-- name: createGame :exec
 INSERT INTO games(id, name) VALUES (?, ?)
 `
 
-type CreateGameParams struct {
+type createGameParams struct {
 	ID   int64
 	Name string
 }
 
-func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) error {
+func (q *Queries) createGame(ctx context.Context, arg createGameParams) error {
 	_, err := q.exec(ctx, q.createGameStmt, createGame, arg.ID, arg.Name)
 	return err
 }
 
-const createGameInfo = `-- name: CreateGameInfo :exec
+const createGameInfo = `-- name: createGameInfo :exec
 INSERT INTO game_info(game_id, image_url, initial_price, final_price, discount_percent) VALUES (?,?,?,?,?)
 `
 
-type CreateGameInfoParams struct {
+type createGameInfoParams struct {
 	GameID          int64
 	ImageUrl        sql.NullString
 	InitialPrice    sql.NullFloat64
@@ -36,7 +36,7 @@ type CreateGameInfoParams struct {
 	DiscountPercent sql.NullFloat64
 }
 
-func (q *Queries) CreateGameInfo(ctx context.Context, arg CreateGameInfoParams) error {
+func (q *Queries) createGameInfo(ctx context.Context, arg createGameInfoParams) error {
 	_, err := q.exec(ctx, q.createGameInfoStmt, createGameInfo,
 		arg.GameID,
 		arg.ImageUrl,
@@ -47,21 +47,21 @@ func (q *Queries) CreateGameInfo(ctx context.Context, arg CreateGameInfoParams) 
 	return err
 }
 
-const findGame = `-- name: FindGame :one
+const findGame = `-- name: findGame :one
 SELECT g.id, g.name, gi.game_id, gi.image_url, gi.initial_price, gi.final_price, gi.discount_percent  FROM games as g
     LEFT JOIN game_info as gi
     ON g.id = gi.game_id
     WHERE g.id = ? LIMIT 1
 `
 
-type FindGameRow struct {
+type findGameRow struct {
 	Game     Game
 	GameInfo GameInfo
 }
 
-func (q *Queries) FindGame(ctx context.Context, id int64) (FindGameRow, error) {
+func (q *Queries) findGame(ctx context.Context, id int64) (findGameRow, error) {
 	row := q.queryRow(ctx, q.findGameStmt, findGame, id)
-	var i FindGameRow
+	var i findGameRow
 	err := row.Scan(
 		&i.Game.ID,
 		&i.Game.Name,
@@ -72,4 +72,57 @@ func (q *Queries) FindGame(ctx context.Context, id int64) (FindGameRow, error) {
 		&i.GameInfo.DiscountPercent,
 	)
 	return i, err
+}
+
+const findUserGames = `-- name: findUserGames :many
+SELECT
+    g.id AS game_id,
+    g.name AS game_name,
+    gi.image_url,
+    gi.initial_price,
+    gi.final_price,
+    gi.discount_percent
+FROM users_games AS ug
+JOIN games AS g ON ug.game_id = g.id
+LEFT JOIN game_info AS gi ON g.id = gi.game_id
+WHERE ug.user_id = ?
+`
+
+type findUserGamesRow struct {
+	GameID          int64
+	GameName        string
+	ImageUrl        sql.NullString
+	InitialPrice    sql.NullFloat64
+	FinalPrice      sql.NullFloat64
+	DiscountPercent sql.NullFloat64
+}
+
+func (q *Queries) findUserGames(ctx context.Context, userID int64) ([]findUserGamesRow, error) {
+	rows, err := q.query(ctx, q.findUserGamesStmt, findUserGames, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []findUserGamesRow
+	for rows.Next() {
+		var i findUserGamesRow
+		if err := rows.Scan(
+			&i.GameID,
+			&i.GameName,
+			&i.ImageUrl,
+			&i.InitialPrice,
+			&i.FinalPrice,
+			&i.DiscountPercent,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

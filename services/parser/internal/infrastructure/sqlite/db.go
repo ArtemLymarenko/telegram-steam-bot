@@ -25,13 +25,16 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
 	if q.createGameStmt, err = db.PrepareContext(ctx, createGame); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateGame: %w", err)
+		return nil, fmt.Errorf("error preparing query createGame: %w", err)
 	}
 	if q.createGameInfoStmt, err = db.PrepareContext(ctx, createGameInfo); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateGameInfo: %w", err)
+		return nil, fmt.Errorf("error preparing query createGameInfo: %w", err)
 	}
 	if q.findGameStmt, err = db.PrepareContext(ctx, findGame); err != nil {
-		return nil, fmt.Errorf("error preparing query FindGame: %w", err)
+		return nil, fmt.Errorf("error preparing query findGame: %w", err)
+	}
+	if q.findUserGamesStmt, err = db.PrepareContext(ctx, findUserGames); err != nil {
+		return nil, fmt.Errorf("error preparing query findUserGames: %w", err)
 	}
 	return &q, nil
 }
@@ -51,6 +54,11 @@ func (q *Queries) Close() error {
 	if q.findGameStmt != nil {
 		if cerr := q.findGameStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing findGameStmt: %w", cerr)
+		}
+	}
+	if q.findUserGamesStmt != nil {
+		if cerr := q.findUserGamesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing findUserGamesStmt: %w", cerr)
 		}
 	}
 	return err
@@ -95,6 +103,7 @@ type Queries struct {
 	createGameStmt     *sql.Stmt
 	createGameInfoStmt *sql.Stmt
 	findGameStmt       *sql.Stmt
+	findUserGamesStmt  *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -104,5 +113,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createGameStmt:     q.createGameStmt,
 		createGameInfoStmt: q.createGameInfoStmt,
 		findGameStmt:       q.findGameStmt,
+		findUserGamesStmt:  q.findUserGamesStmt,
 	}
 }
