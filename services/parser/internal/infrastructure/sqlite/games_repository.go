@@ -51,3 +51,16 @@ func (g *Games) FindUserGames(ctx context.Context, userId int64) ([]domain.Game,
 	foundGames := findUserGamesRowsToGames(games)
 	return foundGames, nil
 }
+
+func (g *Games) AddUserGame(ctx context.Context, userId, gameId int64) error {
+	err := g.queries.addUserGame(ctx, addUserGameParams{
+		UserID: userId,
+		GameID: gameId,
+	})
+	return err
+}
+
+func (g *Games) DeleteGameById(ctx context.Context, gameId int64) error {
+	err := g.queries.deleteGameById(ctx, gameId)
+	return err
+}

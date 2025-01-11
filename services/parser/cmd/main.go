@@ -13,6 +13,8 @@ import (
 	txmanager "parser/pkg/tx_manager"
 )
 
+const SqliteEnableFkCmd = "PRAGMA foreign_keys = ON;"
+
 func main() {
 	connectionPath := "D:\\Development\\GOLang\\steam-tg-bot\\services\\parser\\resources\\sqlite\\sqlite.db"
 
@@ -26,12 +28,17 @@ func main() {
 		}
 	}()
 
+	_, err = db.Exec(SqliteEnableFkCmd)
+	if err != nil {
+		log.Fatal("Error enabling foreign keys: ", err)
+	}
+
 	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://resources/migrations", connectionPath, driver)
+	m, err := migrate.NewWithDatabaseInstance("file://resources/sqlite/migrations", connectionPath, driver)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,9 +50,5 @@ func main() {
 
 	manager := txmanager.New(db)
 	gamesRepo := repository.NewGames(db)
-	gamesSvc := service.NewGames(gamesRepo, manager)
-	err = gamesSvc.TxTest()
-	if err != nil {
-		log.Fatal(err)
-	}
+	_ = service.NewGames(gamesRepo, manager)
 }

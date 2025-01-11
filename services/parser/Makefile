@@ -1,8 +1,8 @@
-CREATE=migrate create -ext sql -dir resources/migrations mig $(name)
+CREATE=migrate create -ext sql -dir resources/sqlite/migrations mig $(name)
 create-migration:
 	$(CREATE)
 
-MIGRATE=migrate -source file://resources/migrations -database sqlite3://resources/sqlite/sqlite.db
+MIGRATE=migrate -source file://resources/sqlite/migrations -database sqlite3://resources/sqlite/sqlite.db
 migrate-up:
 	$(MIGRATE) up
 

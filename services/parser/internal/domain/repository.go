@@ -10,5 +10,7 @@ type GamesRepository interface {
 	CreateGame(ctx context.Context, id int64, name string) error
 	CreateGameInfo(ctx context.Context, info GameInfo) error
 	FindUserGames(ctx context.Context, userId int64) ([]Game, error)
+	AddUserGame(ctx context.Context, userId, gameId int64) error
+	DeleteGameById(ctx context.Context, gameId int64) error
 	WithTx(tx *sql.Tx) GamesRepository
 }

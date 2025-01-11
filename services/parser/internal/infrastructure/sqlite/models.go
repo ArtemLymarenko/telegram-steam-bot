@@ -15,6 +15,7 @@ type Game struct {
 
 type GameInfo struct {
 	GameID          int64
+	Url             sql.NullString
 	ImageUrl        sql.NullString
 	InitialPrice    sql.NullFloat64
 	FinalPrice      sql.NullFloat64

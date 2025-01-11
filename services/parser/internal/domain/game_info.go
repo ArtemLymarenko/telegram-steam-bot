@@ -6,6 +6,7 @@ import (
 
 type GameInfo struct {
 	GameId          int64
+	Url             string
 	ImageUrl        string
 	InitialPrice    float64
 	FinalPrice      float64

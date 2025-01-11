@@ -5,12 +5,14 @@ CREATE TABLE IF NOT EXISTS games (
 
 CREATE TABLE IF NOT EXISTS game_info (
     game_id          INTEGER PRIMARY KEY,
+    url              TEXT,
     image_url        TEXT,
     initial_price    REAL,
     final_price      REAL,
     discount_percent REAL,
 
-    FOREIGN KEY (game_id) REFERENCES games (id)
-     ON DELETE CASCADE
-     ON UPDATE CASCADE
+    CONSTRAINT game_info_game_id_fk
+        FOREIGN KEY (game_id) REFERENCES games (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 )
