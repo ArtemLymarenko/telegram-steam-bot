@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"parser/internal/domain"
+	"github.com/steam-tg-bot/services/parser/internal/domain"
 )
 
 func gameInfoEntityToCreateGameInfoParams(gameInfo domain.GameInfo) createGameInfoParams {

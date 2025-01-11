@@ -7,10 +7,10 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/mattn/go-sqlite3"
+	repository "github.com/steam-tg-bot/services/parser/internal/infrastructure/sqlite"
+	"github.com/steam-tg-bot/services/parser/internal/service"
+	txmanager "github.com/steam-tg-bot/services/parser/pkg/tx_manager"
 	"log"
-	repository "parser/internal/infrastructure/sqlite"
-	"parser/internal/service"
-	txmanager "parser/pkg/tx_manager"
 )
 
 const SqliteEnableFkCmd = "PRAGMA foreign_keys = ON;"

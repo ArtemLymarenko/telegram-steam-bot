@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"database/sql"
-	"parser/internal/domain"
-	txmanager "parser/pkg/tx_manager"
+	"github.com/steam-tg-bot/services/parser/internal/domain"
+	txmanager "github.com/steam-tg-bot/services/parser/pkg/tx_manager"
 )
 
 type Games struct {

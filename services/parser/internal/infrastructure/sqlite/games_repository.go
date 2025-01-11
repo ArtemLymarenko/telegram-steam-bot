@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"parser/internal/domain"
+	"github.com/steam-tg-bot/services/parser/internal/domain"
 )
 
 type Games struct {

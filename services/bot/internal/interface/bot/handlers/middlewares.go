@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"bot/internal/infrastructure/telegram"
-	"bot/internal/interface/bot/messages"
+	"github.com/steam-tg-bot/services/bot/internal/infrastructure/telegram"
+	"github.com/steam-tg-bot/services/bot/internal/interface/bot/messages"
 	"slices"
 	"strings"
 )

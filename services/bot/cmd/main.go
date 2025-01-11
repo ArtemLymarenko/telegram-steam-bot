@@ -1,10 +1,10 @@
 package main
 
 import (
-	"bot/internal/infrastructure/telegram"
-	v1Bot "bot/internal/interface/bot"
-	"bot/internal/interface/bot/handlers"
 	"github.com/joho/godotenv"
+	"github.com/steam-tg-bot/services/bot/internal/infrastructure/telegram"
+	v1Bot "github.com/steam-tg-bot/services/bot/internal/interface/bot"
+	"github.com/steam-tg-bot/services/bot/internal/interface/bot/handlers"
 	"log"
 	"os"
 )
