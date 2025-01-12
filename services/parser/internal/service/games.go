@@ -19,7 +19,7 @@ func NewGames(repo domain.GamesRepository, tx txmanager.TxManager) *Games {
 	}
 }
 
-func (g *Games) FindGame(ctx context.Context, gameId int64) (*domain.Game, error) {
+func (g *Games) FindGame(ctx context.Context, gameId int64) (domain.Game, error) {
 	return g.gamesRepo.FindGame(ctx, gameId)
 }
 
@@ -71,4 +71,9 @@ func (g *Games) FindUserGames(ctx context.Context, userId int64) ([]domain.Game,
 
 func (g *Games) DeleteGameById(ctx context.Context, gameId int64) error {
 	return g.gamesRepo.DeleteGameById(ctx, gameId)
+}
+
+func (g *Games) SearchGamesByName(ctx context.Context, name string) ([]domain.Game, error) {
+	panic("SearchGamesByName not implemented")
+	return nil, nil
 }

@@ -21,14 +21,17 @@ func (g *Games) WithTx(tx *sql.Tx) domain.GamesRepository {
 	}
 }
 
-func (g *Games) FindGame(ctx context.Context, gameId int64) (*domain.Game, error) {
+func (g *Games) FindGame(ctx context.Context, gameId int64) (domain.Game, error) {
 	game, err := g.queries.findGame(ctx, gameId)
 	if err != nil {
-		return nil, errors.New("failed to find game")
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.Game{}, errors.New("failed to find game")
+		}
+		return domain.Game{}, err
 	}
 
 	found := findGameRowToGame(game)
-	return &found, nil
+	return found, nil
 }
 
 func (g *Games) CreateGame(ctx context.Context, id int64, name string) error {
@@ -45,7 +48,10 @@ func (g *Games) CreateGameInfo(ctx context.Context, info domain.GameInfo) error 
 func (g *Games) FindUserGames(ctx context.Context, userId int64) ([]domain.Game, error) {
 	games, err := g.queries.findUserGames(ctx, userId)
 	if err != nil {
-		return nil, errors.New("failed to find user games")
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("failed to find user games")
+		}
+		return nil, err
 	}
 
 	foundGames := findUserGamesRowsToGames(games)

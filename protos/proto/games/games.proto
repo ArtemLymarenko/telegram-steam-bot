@@ -15,9 +15,9 @@ message Game {
   string name = 2;
   string url = 3;
   string image_url = 4;
-  float  initial_price = 5;
-  float  final_price = 6;
-  float  discount_percent = 7;
+  double initial_price = 5;
+  double final_price = 6;
+  double discount_percent = 7;
 }
 
 message GetUserGamesRequest {
