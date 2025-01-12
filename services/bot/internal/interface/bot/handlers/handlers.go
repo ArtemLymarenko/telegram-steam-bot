@@ -1,8 +1,8 @@
 package handlers
 
 import (
+	"github.com/ArtemLymarenko/steam-tg-bot/services/bot/internal/infrastructure/telegram"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/steam-tg-bot/services/bot/internal/infrastructure/telegram"
 	"strings"
 )
 

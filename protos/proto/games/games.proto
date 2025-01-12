@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package games;
+
+option go_package = "github.com/ArtemLymarenko/steam-tg-bot/protos/proto/games";
+
+service Games {
+  rpc GetUserGames(GetUserGamesRequest) returns (GetUserGamesResponse) {}
+  rpc AddUserGame(AddUserGameRequest) returns (AddUserGameResponse) {}
+  rpc SearchGamesByName(SearchGamesByNameRequest) returns (SearchGamesByNameResponse) {}
+}
+
+message Game {
+  int64  id = 1;
+  string name = 2;
+  string url = 3;
+  string image_url = 4;
+  float  initial_price = 5;
+  float  final_price = 6;
+  float  discount_percent = 7;
+}
+
+message GetUserGamesRequest {
+  int64 user_id = 1;
+}
+
+message GetUserGamesResponse {
+  repeated Game games = 1;
+}
+
+message AddUserGameRequest {
+  int64 user_id = 1;
+  int64 game_id = 2;
+}
+
+message AddUserGameResponse {
+  bool success = 1;
+}
+
+message SearchGamesByNameRequest {
+  string name = 1;
+}
+
+message SearchGamesByNameResponse {
+  repeated Game games = 1;
+}

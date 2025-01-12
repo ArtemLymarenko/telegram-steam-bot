@@ -1,8 +1,8 @@
 package v1Bot
 
 import (
-	"github.com/steam-tg-bot/services/bot/internal/infrastructure/telegram"
-	"github.com/steam-tg-bot/services/bot/internal/interface/bot/handlers"
+	"github.com/ArtemLymarenko/steam-tg-bot/services/bot/internal/infrastructure/telegram"
+	"github.com/ArtemLymarenko/steam-tg-bot/services/bot/internal/interface/bot/handlers"
 )
 
 func GetRouter(handlers *handlers.BotHandlers) *telegram.Router {
