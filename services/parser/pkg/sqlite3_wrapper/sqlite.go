@@ -38,9 +38,11 @@ func (s *Sqlite3) GetDbInstance() *sql.DB {
 }
 
 func (s *Sqlite3) CloseConnection() {
+	log.Println("Sqlite in closing connection...")
 	if err := s.db.Close(); err != nil {
 		log.Println(err)
 	}
+	log.Println("Sqlite connection closed!")
 }
 
 func (s *Sqlite3) MustMigrateUp(migrationPath string) {

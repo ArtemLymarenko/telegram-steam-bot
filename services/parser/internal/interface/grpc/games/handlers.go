@@ -15,22 +15,22 @@ type GamesService interface {
 	SearchGamesByName(ctx context.Context, name string) ([]domain.Game, error)
 }
 
-type serverApi struct {
+type ServerApi struct {
 	games.UnimplementedGamesServer
 	gamesService GamesService
 }
 
-func NewServerApi(gamesService GamesService) *serverApi {
-	return &serverApi{
+func NewServerApi(gamesService GamesService) *ServerApi {
+	return &ServerApi{
 		gamesService: gamesService,
 	}
 }
 
-func (s *serverApi) Register(gRPC *grpc.Server) {
+func (s *ServerApi) Register(gRPC *grpc.Server) {
 	games.RegisterGamesServer(gRPC, s)
 }
 
-func (s *serverApi) GetUserGames(
+func (s *ServerApi) GetUserGames(
 	ctx context.Context,
 	req *games.GetUserGamesRequest,
 ) (*games.GetUserGamesResponse, error) {
@@ -48,7 +48,7 @@ func (s *serverApi) GetUserGames(
 	return getUserGamesResponse, nil
 }
 
-func (s *serverApi) AddUserGame(
+func (s *ServerApi) AddUserGame(
 	ctx context.Context,
 	req *games.AddUserGameRequest,
 ) (*games.AddUserGameResponse, error) {
@@ -66,7 +66,7 @@ func (s *serverApi) AddUserGame(
 	}, nil
 }
 
-func (s *serverApi) SearchGamesByName(
+func (s *ServerApi) SearchGamesByName(
 	ctx context.Context,
 	req *games.SearchGamesByNameRequest,
 ) (*games.SearchGamesByNameResponse, error) {

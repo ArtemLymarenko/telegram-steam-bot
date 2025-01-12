@@ -2,31 +2,49 @@ package app
 
 import (
 	grpcapp "github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/app/grpc"
+	repository "github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/infrastructure/sqlite"
+	gamesgrpc "github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/interface/grpc/games"
+	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/service"
+	sqlite3Wrapper "github.com/ArtemLymarenko/steam-tg-bot/services/parser/pkg/sqlite3_wrapper"
+	txmanager "github.com/ArtemLymarenko/steam-tg-bot/services/parser/pkg/tx_manager"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 type App struct {
-	GRPCApp *grpcapp.App
+	gRPCApp *grpcapp.App
+	sqlite  *sqlite3Wrapper.Sqlite3
 }
 
-func New(grpcPort int) *App {
-	grpcApp := grpcapp.New(grpcPort)
+func New(grpcPort int, sqlite *sqlite3Wrapper.Sqlite3) *App {
+	db := sqlite.GetDbInstance()
+
+	manager := txmanager.New(db)
+
+	gamesRepo := repository.NewGames(db)
+
+	gamesService := service.NewGames(gamesRepo, manager)
+
+	gamesGrpcApi := gamesgrpc.NewServerApi(gamesService)
+
+	grpcApp := grpcapp.New(grpcPort, gamesGrpcApi)
 
 	return &App{
-		GRPCApp: grpcApp,
+		gRPCApp: grpcApp,
+		sqlite:  sqlite,
 	}
 }
 
 func (a *App) Start() {
 	stopCh := a.waitForShutdown()
-	a.GRPCApp.MustStart()
+	a.gRPCApp.MustStart()
 	<-stopCh
 }
 
 func (a *App) gracefulStopLogic() {
-	a.GRPCApp.Stop()
+	a.sqlite.CloseConnection()
+	a.gRPCApp.Stop()
 }
 
 func (a *App) waitForShutdown() <-chan struct{} {

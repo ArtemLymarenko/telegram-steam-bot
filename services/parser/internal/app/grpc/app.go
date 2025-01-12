@@ -3,7 +3,6 @@ package grpcapp
 import (
 	"fmt"
 	gamesgrpc "github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/interface/grpc/games"
-	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/service"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -14,11 +13,9 @@ type App struct {
 	port       int
 }
 
-func New(port int) *App {
+func New(port int, gamesApi *gamesgrpc.ServerApi) *App {
 	grpcServer := grpc.NewServer()
 
-	gamesService := service.NewGames(nil, nil)
-	gamesApi := gamesgrpc.NewServerApi(gamesService)
 	gamesApi.Register(grpcServer)
 
 	return &App{
@@ -41,6 +38,7 @@ func (a *App) MustStart() {
 }
 
 func (a *App) Stop() {
+	log.Println("gRPC server is stopping...")
 	a.gRPCServer.GracefulStop()
 	log.Println("gRPC server stopped!")
 }
