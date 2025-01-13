@@ -9,7 +9,7 @@ import (
 
 func main() {
 	const (
-		connectionPath = "D:\\Development\\GOLang\\steam-tg-bot\\services\\parser\\resources\\sqlite\\sqlite.db"
+		connectionPath = "D://Development/GOLang/steam-tg-bot/services/parser/resources/sqlite/sqlite.db"
 		migrationsPath = "file://services/parser/resources/sqlite/migrations"
 		port           = 44044
 	)

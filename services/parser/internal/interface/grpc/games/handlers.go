@@ -2,17 +2,19 @@ package gamesgrpc
 
 import (
 	"context"
+	"errors"
 	"github.com/ArtemLymarenko/steam-tg-bot/protos/gen/go/games"
 	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/domain"
+	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/domain/game"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type GamesService interface {
-	FindUserGames(ctx context.Context, userId int64) ([]domain.Game, error)
-	AddUserGame(ctx context.Context, userId, gameId int64) error
-	SearchGamesByName(ctx context.Context, name string) ([]domain.Game, error)
+	FindUserGames(ctx context.Context, userId game.UserId) ([]game.Game, error)
+	AddUserGame(ctx context.Context, userId game.UserId, gameId game.Id) error
+	SearchGamesByName(ctx context.Context, name game.Name) ([]game.Game, error)
 }
 
 type ServerApi struct {
@@ -34,15 +36,20 @@ func (s *ServerApi) GetUserGames(
 	ctx context.Context,
 	req *games.GetUserGamesRequest,
 ) (*games.GetUserGamesResponse, error) {
-	userGames, err := s.gamesService.FindUserGames(ctx, req.UserId)
+	userGames, err := s.gamesService.FindUserGames(ctx, game.UserId(req.UserId))
 	if err != nil {
+		var validationError domain.ValidationError
+		if errors.As(err, &validationError) {
+			return nil, status.Error(codes.InvalidArgument, validationError.Error())
+		}
+
 		return nil, status.Error(codes.NotFound, "user games were not found")
 	}
 
 	getUserGamesResponse := &games.GetUserGamesResponse{}
 	getUserGamesResponse.Games = make([]*games.Game, len(userGames))
-	for i, game := range userGames {
-		getUserGamesResponse.Games[i] = mapDomainGameToGameResponse(game)
+	for i, g := range userGames {
+		getUserGamesResponse.Games[i] = mapDomainGameToGameResponse(g)
 	}
 
 	return getUserGamesResponse, nil
@@ -52,12 +59,13 @@ func (s *ServerApi) AddUserGame(
 	ctx context.Context,
 	req *games.AddUserGameRequest,
 ) (*games.AddUserGameResponse, error) {
-	if req.UserId < 0 || req.GameId < 0 {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	err := s.gamesService.AddUserGame(ctx, req.UserId, req.GameId)
+	err := s.gamesService.AddUserGame(ctx, game.UserId(req.UserId), game.Id(req.GameId))
 	if err != nil {
+		var validationError domain.ValidationError
+		if errors.As(err, &validationError) {
+			return nil, status.Error(codes.InvalidArgument, validationError.Error())
+		}
+
 		return nil, status.Error(codes.AlreadyExists, "game already exists")
 	}
 
@@ -70,19 +78,20 @@ func (s *ServerApi) SearchGamesByName(
 	ctx context.Context,
 	req *games.SearchGamesByNameRequest,
 ) (*games.SearchGamesByNameResponse, error) {
-	if req.GetName() == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	foundGames, err := s.gamesService.SearchGamesByName(ctx, req.GetName())
+	foundGames, err := s.gamesService.SearchGamesByName(ctx, game.Name(req.GetName()))
 	if err != nil {
+		var validationError domain.ValidationError
+		if errors.As(err, &validationError) {
+			return nil, status.Error(codes.InvalidArgument, validationError.Error())
+		}
+
 		return nil, status.Error(codes.NotFound, "games were not found")
 	}
 
 	getUserGamesResponse := &games.SearchGamesByNameResponse{}
 	getUserGamesResponse.Games = make([]*games.Game, len(foundGames))
-	for i, game := range foundGames {
-		getUserGamesResponse.Games[i] = mapDomainGameToGameResponse(game)
+	for i, g := range foundGames {
+		getUserGamesResponse.Games[i] = mapDomainGameToGameResponse(g)
 	}
 
 	return getUserGamesResponse, nil

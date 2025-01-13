@@ -3,31 +3,47 @@ package service
 import (
 	"context"
 	"database/sql"
-	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/domain"
+	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/domain/game"
 	txmanager "github.com/ArtemLymarenko/steam-tg-bot/services/parser/pkg/tx_manager"
 )
 
 type Games struct {
-	gamesRepo domain.GamesRepository
+	gamesRepo game.Repository
 	txManager txmanager.TxManager
 }
 
-func NewGames(repo domain.GamesRepository, tx txmanager.TxManager) *Games {
+func NewGames(repo game.Repository, tx txmanager.TxManager) *Games {
 	return &Games{
 		gamesRepo: repo,
 		txManager: tx,
 	}
 }
 
-func (g *Games) FindGame(ctx context.Context, gameId int64) (domain.Game, error) {
+func (g *Games) FindGame(ctx context.Context, gameId game.Id) (game.Game, error) {
+	if err := gameId.Validate(); err != nil {
+		return game.Game{}, err
+	}
+
 	return g.gamesRepo.FindGame(ctx, gameId)
 }
 
-func (g *Games) CreateGame(ctx context.Context, gameId int64, name string) error {
+func (g *Games) CreateGame(ctx context.Context, gameId game.Id, name game.Name) error {
+	if err := gameId.Validate(); err != nil {
+		return err
+	}
+
+	if err := name.Validate(); err != nil {
+		return err
+	}
+
 	return g.gamesRepo.CreateGame(ctx, gameId, name)
 }
 
-func (g *Games) CreateGameInfo(ctx context.Context, info domain.GameInfo) error {
+func (g *Games) CreateGameInfo(ctx context.Context, info game.Info) error {
+	if err := info.Validate(); err != nil {
+		return err
+	}
+
 	_, err := g.FindGame(ctx, info.GameId)
 	if err != nil {
 		return err
@@ -36,7 +52,11 @@ func (g *Games) CreateGameInfo(ctx context.Context, info domain.GameInfo) error 
 	return g.gamesRepo.CreateGameInfo(ctx, info)
 }
 
-func (g *Games) CreateGameWithInfo(ctx context.Context, game domain.Game) error {
+func (g *Games) CreateGameWithInfo(ctx context.Context, game game.Game) error {
+	if err := game.Validate(); err != nil {
+		return err
+	}
+
 	options := &sql.TxOptions{
 		Isolation: sql.LevelReadCommitted,
 		ReadOnly:  false,
@@ -49,14 +69,18 @@ func (g *Games) CreateGameWithInfo(ctx context.Context, game domain.Game) error 
 			return err
 		}
 
-		err = withTx.CreateGameInfo(ctx, game.GameInfo)
+		err = withTx.CreateGameInfo(ctx, game.Info)
 		return err
 	}
 
 	return g.txManager.Run(ctx, options, transaction)
 }
 
-func (g *Games) AddUserGame(ctx context.Context, userId, gameId int64) error {
+func (g *Games) AddUserGame(ctx context.Context, userId game.UserId, gameId game.Id) error {
+	if err := gameId.Validate(); err != nil {
+		return err
+	}
+
 	_, err := g.FindGame(ctx, gameId)
 	if err != nil {
 		return err
@@ -65,15 +89,20 @@ func (g *Games) AddUserGame(ctx context.Context, userId, gameId int64) error {
 	return g.AddUserGame(ctx, userId, gameId)
 }
 
-func (g *Games) FindUserGames(ctx context.Context, userId int64) ([]domain.Game, error) {
+func (g *Games) FindUserGames(ctx context.Context, userId game.UserId) ([]game.Game, error) {
 	return g.gamesRepo.FindUserGames(ctx, userId)
 }
 
-func (g *Games) DeleteGameById(ctx context.Context, gameId int64) error {
+func (g *Games) DeleteGameById(ctx context.Context, gameId game.Id) error {
+	if err := gameId.Validate(); err != nil {
+		return err
+	}
+
 	return g.gamesRepo.DeleteGameById(ctx, gameId)
 }
 
-func (g *Games) SearchGamesByName(ctx context.Context, name string) ([]domain.Game, error) {
+// SearchGamesByName TODO: implement this method
+func (g *Games) SearchGamesByName(ctx context.Context, name game.Name) ([]game.Game, error) {
 	panic("SearchGamesByName not implemented")
 	return nil, nil
 }

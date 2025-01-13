@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/domain"
+	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/domain/game"
 )
 
 type Games struct {
@@ -15,38 +15,38 @@ func NewGames(db DBTX) *Games {
 	return &Games{queries: New(db)}
 }
 
-func (g *Games) WithTx(tx *sql.Tx) domain.GamesRepository {
+func (g *Games) WithTx(tx *sql.Tx) game.Repository {
 	return &Games{
 		queries: g.queries.WithTx(tx),
 	}
 }
 
-func (g *Games) FindGame(ctx context.Context, gameId int64) (domain.Game, error) {
-	game, err := g.queries.findGame(ctx, gameId)
+func (g *Games) FindGame(ctx context.Context, gameId game.Id) (game.Game, error) {
+	found, err := g.queries.findGame(ctx, int64(gameId))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return domain.Game{}, errors.New("failed to find game")
+			return game.Game{}, errors.New("failed to find game")
 		}
-		return domain.Game{}, err
+		return game.Game{}, err
 	}
 
-	found := findGameRowToGame(game)
-	return found, nil
+	mappedGame := findGameRowToGame(found)
+	return mappedGame, nil
 }
 
-func (g *Games) CreateGame(ctx context.Context, id int64, name string) error {
+func (g *Games) CreateGame(ctx context.Context, id game.Id, name game.Name) error {
 	return g.queries.createGame(ctx, createGameParams{
-		ID:   id,
-		Name: name,
+		ID:   int64(id),
+		Name: string(name),
 	})
 }
 
-func (g *Games) CreateGameInfo(ctx context.Context, info domain.GameInfo) error {
+func (g *Games) CreateGameInfo(ctx context.Context, info game.Info) error {
 	return g.queries.createGameInfo(ctx, gameInfoEntityToCreateGameInfoParams(info))
 }
 
-func (g *Games) FindUserGames(ctx context.Context, userId int64) ([]domain.Game, error) {
-	games, err := g.queries.findUserGames(ctx, userId)
+func (g *Games) FindUserGames(ctx context.Context, userId game.UserId) ([]game.Game, error) {
+	games, err := g.queries.findUserGames(ctx, int64(userId))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("failed to find user games")
@@ -58,15 +58,21 @@ func (g *Games) FindUserGames(ctx context.Context, userId int64) ([]domain.Game,
 	return foundGames, nil
 }
 
-func (g *Games) AddUserGame(ctx context.Context, userId, gameId int64) error {
+func (g *Games) AddUserGame(ctx context.Context, userId game.UserId, gameId game.Id) error {
 	err := g.queries.addUserGame(ctx, addUserGameParams{
-		UserID: userId,
-		GameID: gameId,
+		UserID: int64(userId),
+		GameID: int64(gameId),
 	})
 	return err
 }
 
-func (g *Games) DeleteGameById(ctx context.Context, gameId int64) error {
-	err := g.queries.deleteGameById(ctx, gameId)
+func (g *Games) DeleteGameById(ctx context.Context, gameId game.Id) error {
+	err := g.queries.deleteGameById(ctx, int64(gameId))
 	return err
+}
+
+// SearchGamesByName TODO: implement this method
+func SearchGamesByName(ctx context.Context, name game.Name) ([]game.Game, error) {
+	panic("SearchGamesByName not implemented")
+	return nil, nil
 }
