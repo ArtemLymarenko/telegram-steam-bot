@@ -101,8 +101,14 @@ func (g *Games) DeleteGameById(ctx context.Context, gameId game.Id) error {
 	return g.gamesRepo.DeleteGameById(ctx, gameId)
 }
 
-// SearchGamesByName TODO: implement this method
 func (g *Games) SearchGamesByName(ctx context.Context, name game.Name) ([]game.Game, error) {
-	panic("SearchGamesByName not implemented")
-	return nil, nil
+	if err := name.Validate(); err != nil {
+		return nil, err
+	}
+
+	found, err := g.gamesRepo.SearchGamesByName(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+	return found, nil
 }

@@ -71,8 +71,15 @@ func (g *Games) DeleteGameById(ctx context.Context, gameId game.Id) error {
 	return err
 }
 
-// SearchGamesByName TODO: implement this method
-func SearchGamesByName(ctx context.Context, name game.Name) ([]game.Game, error) {
-	panic("SearchGamesByName not implemented")
-	return nil, nil
+func (g *Games) SearchGamesByName(ctx context.Context, name game.Name) ([]game.Game, error) {
+	found, err := g.queries.searchGamesByName(ctx, string(name))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("failed to search games by name")
+		}
+		return nil, err
+	}
+
+	games := searchUserGamesRowsToGames(found)
+	return games, err
 }

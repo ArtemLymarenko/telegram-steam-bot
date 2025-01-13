@@ -144,3 +144,48 @@ func (q *Queries) findUserGames(ctx context.Context, userID int64) ([]findUserGa
 	}
 	return items, nil
 }
+
+const searchGamesByName = `-- name: searchGamesByName :many
+SELECT g.id, g.name, gi.game_id, gi.url, gi.image_url, gi.initial_price, gi.final_price, gi.discount_percent
+FROM games_fts AS fts
+JOIN games AS g ON fts.rowid = g.id
+LEFT JOIN game_info AS gi ON g.id = gi.game_id
+WHERE fts.name  MATCH ?
+`
+
+type searchGamesByNameRow struct {
+	Game     Game
+	GameInfo GameInfo
+}
+
+func (q *Queries) searchGamesByName(ctx context.Context, name string) ([]searchGamesByNameRow, error) {
+	rows, err := q.db.QueryContext(ctx, searchGamesByName, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []searchGamesByNameRow
+	for rows.Next() {
+		var i searchGamesByNameRow
+		if err := rows.Scan(
+			&i.Game.ID,
+			&i.Game.Name,
+			&i.GameInfo.GameID,
+			&i.GameInfo.Url,
+			&i.GameInfo.ImageUrl,
+			&i.GameInfo.InitialPrice,
+			&i.GameInfo.FinalPrice,
+			&i.GameInfo.DiscountPercent,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

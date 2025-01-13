@@ -37,3 +37,11 @@ func findUserGamesRowsToGames(rows []findUserGamesRow) []game.Game {
 	}
 	return result
 }
+
+func searchUserGamesRowsToGames(rows []searchGamesByNameRow) []game.Game {
+	result := make([]game.Game, len(rows))
+	for i, row := range rows {
+		result[i] = findGameRowToGame(findGameRow(row))
+	}
+	return result
+}
