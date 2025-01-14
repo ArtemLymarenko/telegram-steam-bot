@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"github.com/ArtemLymarenko/steam-tg-bot/services/bot/internal/infrastructure/telegram"
 	"github.com/ArtemLymarenko/steam-tg-bot/services/bot/internal/interface/dto"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"strconv"
+	"strings"
 )
 
 type GamesClient interface {
@@ -43,11 +46,48 @@ func (handlers *BotHandlers) Help(ctx *telegram.RequestCtx) error {
 }
 
 func (handlers *BotHandlers) AddGame(ctx *telegram.RequestCtx) error {
+	id, err := ctx.GetCmdText()
+	if err != nil {
+		return ctx.Send("Please, provide a game id!")
+	}
+	gameId, err := strconv.Atoi(id)
+	if err != nil {
+		return ctx.Send("Please, provide a valid game id!")
+	}
+
+	response, err := handlers.gamesClient.AddUserGame(context.Background(), dto.AddUserGameRequest{
+		UserId: ctx.Update.Message.From.ID,
+		GameId: int64(gameId),
+	})
+	if err != nil || !response.Success {
+		return ctx.Send("Failed to add a game!")
+	}
+
 	return ctx.Send("Game has been added successfully!")
 }
 
 func (handlers *BotHandlers) CheckMyGames(ctx *telegram.RequestCtx) error {
-	return ctx.Send("Games you provided don't have a discount now...\nTry again later.")
+	response, err := handlers.gamesClient.GetUserGames(context.Background(), dto.GetUserGamesRequest{
+		UserId: ctx.Update.Message.From.ID,
+	})
+	if err != nil {
+		return ctx.Send("Failed to get your games!")
+	}
+
+	builder := strings.Builder{}
+	for _, game := range response.Games {
+		builder.WriteString(fmt.Sprintf(
+			"- %s: %s\nInitial Price: %.2f\nFinal Price: %.2f\nTotal discount: %.2f%%\n",
+			game.Name,
+			game.Url,
+			game.InitialPrice,
+			game.FinalPrice,
+			game.DiscountPercent,
+		))
+		builder.WriteString("\n")
+	}
+
+	return ctx.Send(builder.String())
 }
 
 func (handlers *BotHandlers) ChooseUserGameToAdd(ctx *telegram.RequestCtx) error {

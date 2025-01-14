@@ -44,7 +44,6 @@ func (c *ClientApi) AddUserGame(
 	if err != nil {
 		return dto.AddUserGameResponse{Success: false}, err
 	}
-
 	if result == nil {
 		return dto.AddUserGameResponse{Success: false}, errors.New("failed to add game")
 	}

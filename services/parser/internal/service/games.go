@@ -86,7 +86,7 @@ func (g *Games) AddUserGame(ctx context.Context, userId game.UserId, gameId game
 		return err
 	}
 
-	return g.AddUserGame(ctx, userId, gameId)
+	return g.gamesRepo.AddUserGame(ctx, userId, gameId)
 }
 
 func (g *Games) FindUserGames(ctx context.Context, userId game.UserId) ([]game.Game, error) {

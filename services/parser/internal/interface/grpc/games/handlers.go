@@ -68,7 +68,6 @@ func (s *ServerApi) AddUserGame(
 
 		return nil, status.Error(codes.AlreadyExists, "game already exists")
 	}
-
 	return &games.AddUserGameResponse{
 		Success: true,
 	}, nil
