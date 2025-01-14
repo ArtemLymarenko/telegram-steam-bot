@@ -12,3 +12,6 @@ migrate-down:
 
 sqlc-generate:
 	cd resources/sqlite && sqlc generate
+
+seed:
+	go run -tags="fts5" cmd/seed/main.go

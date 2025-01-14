@@ -18,3 +18,6 @@ parser-m-down:
 
 parser-sqlc-generate:
 	cd services/parser && make sqlc-generate
+
+parser-seed:
+	cd services/parser && make seed
