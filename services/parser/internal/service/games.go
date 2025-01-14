@@ -89,6 +89,14 @@ func (g *Games) AddUserGame(ctx context.Context, userId game.UserId, gameId game
 	return g.gamesRepo.AddUserGame(ctx, userId, gameId)
 }
 
+func (g *Games) DeleteUserGame(ctx context.Context, userId game.UserId, gameId game.Id) (game.Id, error) {
+	if err := gameId.Validate(); err != nil {
+		return 0, err
+	}
+
+	return g.gamesRepo.DeleteUserGame(ctx, userId, gameId)
+}
+
 func (g *Games) FindUserGames(ctx context.Context, userId game.UserId) ([]game.Game, error) {
 	return g.gamesRepo.FindUserGames(ctx, userId)
 }

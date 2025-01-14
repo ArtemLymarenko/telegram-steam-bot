@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Games_GetUserGames_FullMethodName      = "/games.Games/GetUserGames"
 	Games_AddUserGame_FullMethodName       = "/games.Games/AddUserGame"
+	Games_DeleteUserGame_FullMethodName    = "/games.Games/DeleteUserGame"
 	Games_SearchGamesByName_FullMethodName = "/games.Games/SearchGamesByName"
 )
 
@@ -30,6 +31,7 @@ const (
 type GamesClient interface {
 	GetUserGames(ctx context.Context, in *GetUserGamesRequest, opts ...grpc.CallOption) (*GetUserGamesResponse, error)
 	AddUserGame(ctx context.Context, in *AddUserGameRequest, opts ...grpc.CallOption) (*AddUserGameResponse, error)
+	DeleteUserGame(ctx context.Context, in *DeleteUserGameRequest, opts ...grpc.CallOption) (*DeleteUserGameResponse, error)
 	SearchGamesByName(ctx context.Context, in *SearchGamesByNameRequest, opts ...grpc.CallOption) (*SearchGamesByNameResponse, error)
 }
 
@@ -61,6 +63,16 @@ func (c *gamesClient) AddUserGame(ctx context.Context, in *AddUserGameRequest, o
 	return out, nil
 }
 
+func (c *gamesClient) DeleteUserGame(ctx context.Context, in *DeleteUserGameRequest, opts ...grpc.CallOption) (*DeleteUserGameResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteUserGameResponse)
+	err := c.cc.Invoke(ctx, Games_DeleteUserGame_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *gamesClient) SearchGamesByName(ctx context.Context, in *SearchGamesByNameRequest, opts ...grpc.CallOption) (*SearchGamesByNameResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SearchGamesByNameResponse)
@@ -77,6 +89,7 @@ func (c *gamesClient) SearchGamesByName(ctx context.Context, in *SearchGamesByNa
 type GamesServer interface {
 	GetUserGames(context.Context, *GetUserGamesRequest) (*GetUserGamesResponse, error)
 	AddUserGame(context.Context, *AddUserGameRequest) (*AddUserGameResponse, error)
+	DeleteUserGame(context.Context, *DeleteUserGameRequest) (*DeleteUserGameResponse, error)
 	SearchGamesByName(context.Context, *SearchGamesByNameRequest) (*SearchGamesByNameResponse, error)
 	mustEmbedUnimplementedGamesServer()
 }
@@ -93,6 +106,9 @@ func (UnimplementedGamesServer) GetUserGames(context.Context, *GetUserGamesReque
 }
 func (UnimplementedGamesServer) AddUserGame(context.Context, *AddUserGameRequest) (*AddUserGameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddUserGame not implemented")
+}
+func (UnimplementedGamesServer) DeleteUserGame(context.Context, *DeleteUserGameRequest) (*DeleteUserGameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserGame not implemented")
 }
 func (UnimplementedGamesServer) SearchGamesByName(context.Context, *SearchGamesByNameRequest) (*SearchGamesByNameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SearchGamesByName not implemented")
@@ -154,6 +170,24 @@ func _Games_AddUserGame_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Games_DeleteUserGame_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserGameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GamesServer).DeleteUserGame(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Games_DeleteUserGame_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GamesServer).DeleteUserGame(ctx, req.(*DeleteUserGameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Games_SearchGamesByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SearchGamesByNameRequest)
 	if err := dec(in); err != nil {
@@ -186,6 +220,10 @@ var Games_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddUserGame",
 			Handler:    _Games_AddUserGame_Handler,
+		},
+		{
+			MethodName: "DeleteUserGame",
+			Handler:    _Games_DeleteUserGame_Handler,
 		},
 		{
 			MethodName: "SearchGamesByName",

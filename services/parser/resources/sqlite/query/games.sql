@@ -29,3 +29,6 @@ FROM games_fts AS fts
 JOIN games AS g ON fts.rowid = g.id
 LEFT JOIN game_info AS gi ON g.id = gi.game_id
 WHERE fts.name  MATCH ?;
+
+-- name: deleteUserGame :one
+DELETE FROM users_games WHERE user_id = ? AND game_id = ? RETURNING game_id;

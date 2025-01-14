@@ -72,6 +72,22 @@ func (q *Queries) deleteGameById(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteUserGame = `-- name: deleteUserGame :one
+DELETE FROM users_games WHERE user_id = ? AND game_id = ? RETURNING game_id
+`
+
+type deleteUserGameParams struct {
+	UserID int64
+	GameID int64
+}
+
+func (q *Queries) deleteUserGame(ctx context.Context, arg deleteUserGameParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, deleteUserGame, arg.UserID, arg.GameID)
+	var game_id int64
+	err := row.Scan(&game_id)
+	return game_id, err
+}
+
 const findGame = `-- name: findGame :one
 SELECT g.id, g.name, gi.game_id, gi.url, gi.image_url, gi.initial_price, gi.final_price, gi.discount_percent  FROM games as g
     LEFT JOIN game_info as gi

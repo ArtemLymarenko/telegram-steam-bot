@@ -27,6 +27,15 @@ type AddUserGameResponse struct {
 	Success bool
 }
 
+type DeleteUserGameRequest struct {
+	UserId int64
+	GameId int64
+}
+
+type DeleteUserGameResponse struct {
+	Success bool
+}
+
 type SearchGameRequest struct {
 	Name string
 }

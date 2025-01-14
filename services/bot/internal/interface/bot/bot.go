@@ -15,7 +15,8 @@ func GetRouter(handlers *handlers.BotHandlers) *telegram.Router {
 	router.AddHandler(telegram.HandlerTypeCmd, "open", handlers.Open)
 	router.AddHandler(telegram.HandlerTypeCmd, "close", handlers.Close)
 	router.AddHandler(telegram.HandlerTypeCmd, "help", handlers.Help)
-	router.AddHandler(telegram.HandlerTypeCmd, "add_steam_game", handlers.AddGame)
+	router.AddHandler(telegram.HandlerTypeCmd, "add_steam_game", handlers.AddUserGame)
+	router.AddHandler(telegram.HandlerTypeCmd, "delete_steam_game", handlers.DeleteUserGame)
 	router.AddHandler(telegram.HandlerTypeCmd, "check_my_games", handlers.CheckMyGames)
 
 	return router

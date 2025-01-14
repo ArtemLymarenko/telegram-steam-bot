@@ -66,6 +66,17 @@ func (g *Games) AddUserGame(ctx context.Context, userId game.UserId, gameId game
 	return err
 }
 
+func (g *Games) DeleteUserGame(ctx context.Context, userId game.UserId, gameId game.Id) (game.Id, error) {
+	id, err := g.queries.deleteUserGame(ctx, deleteUserGameParams{
+		UserID: int64(userId),
+		GameID: int64(gameId),
+	})
+	if err != nil {
+		return 0, err
+	}
+	return game.Id(id), err
+}
+
 func (g *Games) DeleteGameById(ctx context.Context, gameId game.Id) error {
 	err := g.queries.deleteGameById(ctx, int64(gameId))
 	return err

@@ -7,6 +7,7 @@ import (
 	"github.com/ArtemLymarenko/steam-tg-bot/services/bot/internal/interface/dto"
 	"github.com/ArtemLymarenko/steam-tg-bot/services/bot/internal/interface/mapper"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 )
 
 type ClientApi struct {
@@ -26,7 +27,8 @@ func (c *ClientApi) GetUserGames(
 ) (*dto.GetUserGamesResponse, error) {
 	userGames, err := c.GamesClient.GetUserGames(ctx, &games.GetUserGamesRequest{UserId: req.UserId})
 	if err != nil {
-		return nil, err
+		s, _ := status.FromError(err)
+		return nil, errors.New(s.Message())
 	}
 
 	mappedGames := mapper.GamesGrpcToDto(userGames.Games)
@@ -42,13 +44,34 @@ func (c *ClientApi) AddUserGame(
 		GameId: req.GameId,
 	})
 	if err != nil {
-		return dto.AddUserGameResponse{Success: false}, err
+		s, _ := status.FromError(err)
+		return dto.AddUserGameResponse{Success: false}, errors.New(s.Message())
 	}
+
 	if result == nil {
 		return dto.AddUserGameResponse{Success: false}, errors.New("failed to add game")
 	}
 
 	return dto.AddUserGameResponse{Success: result.Success}, nil
+}
+
+func (c *ClientApi) DeleteUserGame(
+	ctx context.Context,
+	req dto.DeleteUserGameRequest,
+) (dto.DeleteUserGameResponse, error) {
+	result, err := c.GamesClient.DeleteUserGame(ctx, &games.DeleteUserGameRequest{
+		UserId: req.UserId,
+		GameId: req.GameId,
+	})
+	if err != nil {
+		s, _ := status.FromError(err)
+		return dto.DeleteUserGameResponse{Success: false}, errors.New(s.Message())
+	}
+	if result == nil {
+		return dto.DeleteUserGameResponse{Success: false}, errors.New("failed to add game")
+	}
+
+	return dto.DeleteUserGameResponse{Success: result.Success}, nil
 }
 
 func (c *ClientApi) SearchGamesByName(
@@ -59,10 +82,10 @@ func (c *ClientApi) SearchGamesByName(
 		Name: req.Name,
 	})
 	if err != nil {
-		return nil, err
+		s, _ := status.FromError(err)
+		return nil, errors.New(s.Message())
 	}
 
 	mappedGames := mapper.GamesGrpcToDto(result.Games)
-
 	return &dto.SearchGameResponse{Games: mappedGames}, nil
 }

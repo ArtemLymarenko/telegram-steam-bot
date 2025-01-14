@@ -1,35 +1,42 @@
 package game
 
 import (
-	"errors"
 	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/domain"
 	"math"
 )
 
 type Url string
 
-func (url Url) Validate() domain.ValidationError {
+func (url Url) Validate() error {
 	if url == "" {
-		return errors.New("url must not be empty")
+		return domain.ValidationError{
+			Err: "url must not be empty",
+		}
 	}
 	return nil
 }
 
 type ImageUrl string
 
-func (imageUrl ImageUrl) Validate() domain.ValidationError {
+func (imageUrl ImageUrl) Validate() error {
 	if imageUrl == "" {
-		return errors.New("imageUrl must not be empty")
+		return domain.ValidationError{
+			Err: "imageUrl must not be empty",
+		}
 	}
+
 	return nil
 }
 
 type Price float64
 
-func (price Price) Validate() domain.ValidationError {
+func (price Price) Validate() error {
 	if price < 0 {
-		return errors.New("initialPrice must be greater than 0")
+		return domain.ValidationError{
+			Err: "initialPrice must be greater than 0",
+		}
 	}
+
 	return nil
 }
 
@@ -39,10 +46,13 @@ func (price Price) EqualsTo(to Price) bool {
 
 type DiscountPercent float64
 
-func (discountPercent DiscountPercent) Validate() domain.ValidationError {
+func (discountPercent DiscountPercent) Validate() error {
 	if discountPercent < 0 {
-		return errors.New("discountPercent must be greater than 0")
+		return domain.ValidationError{
+			Err: "discountPercent must be greater than 0",
+		}
 	}
+
 	return nil
 }
 
@@ -59,7 +69,7 @@ type Info struct {
 	DiscountPercent DiscountPercent
 }
 
-func (gameInfo Info) Validate() domain.ValidationError {
+func (gameInfo Info) Validate() error {
 	if err := gameInfo.GameId.Validate(); err != nil {
 		return err
 	}

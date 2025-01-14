@@ -7,6 +7,7 @@ option go_package = "github.com/ArtemLymarenko/steam-tg-bot/protos/proto/games";
 service Games {
   rpc GetUserGames(GetUserGamesRequest) returns (GetUserGamesResponse) {}
   rpc AddUserGame(AddUserGameRequest) returns (AddUserGameResponse) {}
+  rpc DeleteUserGame(DeleteUserGameRequest) returns (DeleteUserGameResponse) {}
   rpc SearchGamesByName(SearchGamesByNameRequest) returns (SearchGamesByNameResponse) {}
 }
 
@@ -34,6 +35,15 @@ message AddUserGameRequest {
 }
 
 message AddUserGameResponse {
+  bool success = 1;
+}
+
+message DeleteUserGameRequest {
+  int64 user_id = 1;
+  int64 game_id = 2;
+}
+
+message DeleteUserGameResponse {
   bool success = 1;
 }
 
