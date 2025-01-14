@@ -12,17 +12,17 @@ import (
 type RequestCtx struct {
 	Update          *tgbotapi.Update
 	bot             *tgbotapi.BotAPI
-	args            []string
+	cmdText         string
 	currentIndex    int
 	abortProcessing bool
 }
 
-func (ctx *RequestCtx) GetArgs() ([]string, error) {
-	if len(ctx.args) > 0 {
-		return ctx.args, nil
+func (ctx *RequestCtx) GetCmdText() (string, error) {
+	if ctx.cmdText != "" {
+		return ctx.cmdText, nil
 	}
 
-	return nil, errors.New("no args available")
+	return "", errors.New("no args available")
 }
 
 func (ctx *RequestCtx) Send(text string) error {

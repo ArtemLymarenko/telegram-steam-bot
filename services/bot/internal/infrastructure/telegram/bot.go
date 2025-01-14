@@ -28,12 +28,12 @@ func NewBot(token string, debug bool, router *Router) *Bot {
 	}
 }
 
-func (b *Bot) getCommandArgs(text string) []string {
+func (b *Bot) getCommandText(text string) string {
 	msg := strings.Fields(text)
 	if len(msg) == 1 {
-		return nil
+		return ""
 	}
-	return msg[1:]
+	return strings.Join(msg[1:], " ")
 }
 
 func (b *Bot) handleRequestAsync(update *tgbotapi.Update) error {
@@ -61,7 +61,7 @@ func (b *Bot) handleRequestAsync(update *tgbotapi.Update) error {
 			}
 		}
 
-		ctx.args = b.getCommandArgs(msgText)
+		ctx.cmdText = b.getCommandText(msgText)
 	}
 
 	handler, err := b.router.GetHandler(option)

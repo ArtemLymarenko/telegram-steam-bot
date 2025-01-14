@@ -1,15 +1,26 @@
 package handlers
 
 import (
+	"context"
 	"github.com/ArtemLymarenko/steam-tg-bot/services/bot/internal/infrastructure/telegram"
+	"github.com/ArtemLymarenko/steam-tg-bot/services/bot/internal/interface/dto"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"strings"
 )
 
-type BotHandlers struct{}
+type GamesClient interface {
+	GetUserGames(context.Context, dto.GetUserGamesRequest) (*dto.GetUserGamesResponse, error)
+	AddUserGame(context.Context, dto.AddUserGameRequest) (dto.AddUserGameResponse, error)
+	SearchGamesByName(context.Context, dto.SearchGameRequest) (*dto.SearchGameResponse, error)
+}
 
-func NewBotHandlers() *BotHandlers {
-	return &BotHandlers{}
+type BotHandlers struct {
+	gamesClient GamesClient
+}
+
+func NewBotHandlers(gamesClient GamesClient) *BotHandlers {
+	return &BotHandlers{
+		gamesClient: gamesClient,
+	}
 }
 
 func (handlers *BotHandlers) Open(ctx *telegram.RequestCtx) error {
@@ -27,58 +38,34 @@ func (handlers *BotHandlers) Close(ctx *telegram.RequestCtx) error {
 }
 
 func (handlers *BotHandlers) Help(ctx *telegram.RequestCtx) error {
-	args, _ := ctx.GetArgs()
-	return ctx.Send(strings.Join(args, " "))
+	text, _ := ctx.GetCmdText()
+	return ctx.Send(text)
 }
 
 func (handlers *BotHandlers) AddGame(ctx *telegram.RequestCtx) error {
-	args, err := ctx.GetArgs()
-	if err != nil {
-		if len(args) != 1 {
-			return ctx.Send("Should be exactly one argument!")
-		}
-
-		return ctx.Send("Failed to get arguments!")
-	}
-
-	url := args[0]
-	if url == "" {
-		return ctx.Send("Invalid url!")
-	}
-
-	//Add game logic
-
 	return ctx.Send("Game has been added successfully!")
 }
 
 func (handlers *BotHandlers) CheckMyGames(ctx *telegram.RequestCtx) error {
-	//Add check games logic
-
 	return ctx.Send("Games you provided don't have a discount now...\nTry again later.")
 }
 
-func (handlers *BotHandlers) InlineEchoQuery(ctx *telegram.RequestCtx) error {
-	articles := []telegram.Article{
-		{
-			Url:        "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1172470/8249072b14153cdb6bb65e2357f24d86daf7d965/capsule_184x69.jpg?t=1734541502",
-			Title:      "art 1",
-			Desc:       "desc art 1",
-			TextToSend: ctx.Update.InlineQuery.Query,
-		},
-		{
-			Url:        "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1172470/8249072b14153cdb6bb65e2357f24d86daf7d965/capsule_184x69.jpg?t=1734541502",
-			Title:      "art 2",
-			Desc:       "desc art 2",
-			TextToSend: ctx.Update.InlineQuery.Query,
-		},
-		{
-			Url:        "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1172470/8249072b14153cdb6bb65e2357f24d86daf7d965/capsule_184x69.jpg?t=1734541502",
-			Title:      "art 2",
-			Desc:       "desc art 2",
-			TextToSend: ctx.Update.InlineQuery.Query,
-		},
+func (handlers *BotHandlers) ChooseUserGameToAdd(ctx *telegram.RequestCtx) error {
+	gameName := ctx.Update.InlineQuery.Query
+	if gameName == "" {
+		ctx.SendInlineQueryArticle([]telegram.Article{})
+		return nil
 	}
 
+	games, err := handlers.gamesClient.SearchGamesByName(
+		context.Background(),
+		dto.SearchGameRequest{Name: gameName},
+	)
+	if err != nil {
+		return ctx.Send("Nothing is found!")
+	}
+
+	articles := prepareArticlesForGameSearch(games.Games)
 	ctx.SendInlineQueryArticle(articles)
 	return nil
 }
