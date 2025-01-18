@@ -4,7 +4,7 @@ import (
 	grpcapp "github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/app/grpc"
 	repository "github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/infrastructure/sqlite"
 	gamesgrpc "github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/interface/grpc/games"
-	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/service"
+	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/service/games"
 	sqlite3Wrapper "github.com/ArtemLymarenko/steam-tg-bot/services/parser/pkg/sqlite3_wrapper"
 	txmanager "github.com/ArtemLymarenko/steam-tg-bot/services/parser/pkg/tx_manager"
 	"os"
@@ -24,9 +24,9 @@ func New(grpcPort int, sqlite *sqlite3Wrapper.Sqlite3) *App {
 
 	gamesRepo := repository.NewGames(db)
 
-	gamesService := service.NewGames(gamesRepo, manager)
+	gamesSvc := games_service.New(gamesRepo, manager)
 
-	gamesGrpcApi := gamesgrpc.NewServerApi(gamesService)
+	gamesGrpcApi := gamesgrpc.NewServerApi(gamesSvc)
 
 	grpcApp := grpcapp.New(grpcPort, gamesGrpcApi)
 

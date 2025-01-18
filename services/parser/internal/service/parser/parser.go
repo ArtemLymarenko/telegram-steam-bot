@@ -1,69 +1,75 @@
-package parserService
+package parser_service
 
 import (
 	"context"
 	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/domain/game"
-	"log"
+	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/internal/infrastructure/external/game_parsers"
+	"github.com/ArtemLymarenko/steam-tg-bot/services/parser/pkg/thread_pool"
 	"sync"
 )
 
-type ParserGameRepository interface {
+type GameRepository interface {
 	CreateGameInfo(ctx context.Context, info game.Info) error
+	GetGameIdsWithoutInfoBatched(offset, limit int) ([]game.Id, int)
+	GetCountRows(ctx context.Context) int64
 }
 
-type Parser interface {
-	ParseAsync(concurrencyLevel int) <-chan game.Info
+type ParserHandler struct {
+	gamesRepo GameRepository
 }
 
-type ParserService struct {
-	parserGameRepository ParserGameRepository
+func New(gamesRepo GameRepository) *ParserHandler {
+	return &ParserHandler{
+		gamesRepo: gamesRepo,
+	}
 }
 
 type ParserConfig struct {
-	ReadWorkers  int
-	WriteWorkers int
-	Parser       Parser
+	Workers int
+	Parser  game_parsers.Parser
 }
 
-func New(parserGameRepository ParserGameRepository) *ParserService {
-	return &ParserService{
-		parserGameRepository: parserGameRepository,
+func (s *ParserHandler) ParseAndSaveInfoTask(id game.Id, parser game_parsers.Parser) thread_pool.TaskFunc {
+	return func() error {
+		ctx := context.Background()
+		gameInfo := parser.ParseGameInfo(ctx, id)
+		err := s.gamesRepo.CreateGameInfo(ctx, gameInfo)
+		return err
 	}
 }
 
-func (s *ParserService) saveGamesInfoFromCh(gamesCh <-chan game.Info) {
-	ctx := context.Background()
-	for g := range gamesCh {
-		err := s.parserGameRepository.CreateGameInfo(ctx, g)
-		if err != nil {
-			log.Println("Error while saving game info: ", err)
+func (s *ParserHandler) ParseGameInfoAsync(config *ParserConfig) {
+	const batchLimit = 1024
+
+	pool := thread_pool.New(batchLimit)
+	defer pool.TerminateWait()
+
+	pool.RunWorkers(config.Workers)
+
+	totalRows := s.gamesRepo.GetCountRows(context.Background())
+	offset := 0
+	for offset <= int(totalRows) {
+		gameIds, actualOffset := s.gamesRepo.GetGameIdsWithoutInfoBatched(offset, batchLimit)
+
+		for _, id := range gameIds {
+			task := s.ParseAndSaveInfoTask(id, config.Parser)
+			pool.AddTask(task)
 		}
+
+		offset += actualOffset
 	}
 }
 
-func (s *ParserService) ParseAndSaveAsync(readWorkers, writeWorkers int, parser Parser) {
+func (s *ParserHandler) RunParsersAsync(run func(config *ParserConfig), parsersCfgs ...*ParserConfig) {
 	wg := sync.WaitGroup{}
-	gamesCh := parser.ParseAsync(readWorkers)
+	wg.Add(len(parsersCfgs))
 
-	for range writeWorkers {
-		wg.Add(1)
+	for _, cfg := range parsersCfgs {
 		go func() {
 			defer wg.Done()
-			s.saveGamesInfoFromCh(gamesCh)
+			run(cfg)
 		}()
 	}
 
-	wg.Wait()
-}
-
-func (s *ParserService) RunParsers(parser ...ParserConfig) {
-	wg := sync.WaitGroup{}
-	wg.Add(len(parser))
-	for _, p := range parser {
-		go func() {
-			defer wg.Done()
-			s.ParseAndSaveAsync(p.ReadWorkers, p.WriteWorkers, p.Parser)
-		}()
-	}
 	wg.Wait()
 }

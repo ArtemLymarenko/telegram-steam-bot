@@ -1,4 +1,4 @@
-package service
+package games_service
 
 import (
 	"context"
@@ -12,7 +12,7 @@ type Games struct {
 	txManager txmanager.TxManager
 }
 
-func NewGames(repo game.Repository, tx txmanager.TxManager) *Games {
+func New(repo game.Repository, tx txmanager.TxManager) *Games {
 	return &Games{
 		gamesRepo: repo,
 		txManager: tx,
